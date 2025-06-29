@@ -1,3 +1,18 @@
 {
-  "dashboard": "Placeholder for Grafana dashboard config"
+  "dashboard": {
+    "id": null,
+    "title": "FastAPI Service Dashboard",
+    "panels": [
+      {
+        "type": "graph",
+        "title": "Request Latency",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "Latency"
+          }
+        ]
+      }
+    ]
+  }
 }

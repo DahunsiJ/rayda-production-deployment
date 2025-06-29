@@ -1,19 +1,18 @@
-# FastAPI Production Deployment
+# Production-Ready FastAPI Deployment
 
-## Overview
-This project deploys a FastAPI service using Docker, Kubernetes, and GitHub Actions with production-grade security and monitoring.
+This project demonstrates how to make a FastAPI service production-ready using Docker, Kubernetes, CI/CD, monitoring, and security best practices.
 
 ## Setup
-- Dockerize the app
-- Deploy to Kubernetes
-- Monitor with Prometheus and Grafana
+- Python 3.11
+- FastAPI
+- Docker
+- Kubernetes (Minikube)
+- Trivy for security scans
+- Prometheus and Grafana for monitoring
 
-## Deployment
-\`\`\`bash
-bash scripts/deploy.sh
-\`\`\`
+## Usage
 
-## Health Check
-\`\`\`bash
-bash scripts/health-check.sh
-\`\`\`
+1. Clone the repo
+2. Install dependencies: `pip install -r requirements.txt`
+3. Run locally: `uvicorn main:app --reload`
+
