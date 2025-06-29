@@ -5,36 +5,8 @@ on:
     branches: [main]
 
 jobs:
-  test:
-    name: 🔬 Run Unit & Integration Tests + Coverage
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov
-
-      - name: Run tests with coverage
-        run: |
-          pytest --cov=main --cov-report=term --cov-report=xml tests/
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coverage.xml
-
   trivy-fs-scan:
-    name: 🔐 Trivy File System Scan
+    name: 🔐 Trivy Filesystem Scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -46,10 +18,39 @@ jobs:
           scan-type: 'fs'
           scan-ref: '.'
 
+  tests:
+    name: 🔬 Unit & Integration Tests with Coverage
+    runs-on: ubuntu-latest
+    needs: trivy-fs-scan
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov httpx
+
+      - name: Run tests with coverage
+        run: |
+          pytest --cov=main --cov-report=term --cov-report=xml tests/
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
   build:
     name: 🛠️ Build Docker Image
-    needs: [test, trivy-fs-scan]
     runs-on: ubuntu-latest
+    needs: tests
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -62,9 +63,12 @@ jobs:
 
   trivy-image-scan:
     name: 🧪 Trivy Docker Image Scan
-    needs: build
     runs-on: ubuntu-latest
+    needs: build
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Scan Docker image with Trivy
         uses: aquasecurity/trivy-action@master
         with:
@@ -72,9 +76,9 @@ jobs:
           scan-ref: 'dahunsij/fastapi-service:latest'
 
   push:
-    name: 🚀 Push Docker Image to Hub
-    needs: trivy-image-scan
+    name: 🚀 Push Docker Image to Docker Hub
     runs-on: ubuntu-latest
+    needs: trivy-image-scan
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -87,8 +91,8 @@ jobs:
 
   deploy:
     name: 🚦 Deploy to Minikube
-    needs: push
     runs-on: ubuntu-latest
+    needs: push
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -98,8 +102,7 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Apply Kubernetes Manifests
+      - name: Apply Kubernetes manifests
         run: |
-          echo "Skipping live deployment (Minikube not accessible in GitHub Actions)"
-          echo "To deploy manually, run:"
-          echo "kubectl apply -f k8s/"
+          echo "⚠️ Deployment to Minikube is skipped (Minikube isn't accessible in GitHub Actions)"
+          echo "✅ To deploy locally, run: kubectl apply -f k8s/"
